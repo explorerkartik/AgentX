@@ -9,6 +9,7 @@ from agent.tools.weather import get_weather, WEATHER_TOOL
 from agent.tools.web_summarizer import summarize_website, WEB_SUMMARIZER_TOOL
 from agent.tools.currency import convert_currency, CURRENCY_TOOL
 from agent.tools.data_analysis import analyze_data, DATA_ANALYSIS_TOOL
+from agent.tools.memory import remember, recall, forget, REMEMBER_TOOL, RECALL_TOOL, FORGET_TOOL
 
 SYSTEM_PROMPT = (
     "You are AgentX, a powerful AI assistant that can:\n"
@@ -19,12 +20,15 @@ SYSTEM_PROMPT = (
     "5. Get current weather for any city\n"
     "6. Summarize any website or URL\n"
     "7. Convert currencies with live rates\n"
-    "8. Analyze CSV and Excel data files\n\n"
+    "8. Analyze CSV and Excel data files\n"
+    "9. Remember and recall information across sessions\n\n"
     "IMPORTANT RULES:\n"
     "- Call each tool ONLY ONCE per task\n"
     "- Do NOT repeat the same tool with same arguments\n"
     "- After getting tool result, give final answer immediately\n"
     "- Be concise and direct in responses\n"
+    "- When user shares personal info (name, preferences), use 'remember' tool automatically\n"
+    "- When asked about past info, use 'recall' tool\n"
     "- When asked to write code, ALWAYS show code block first then output\n"
     "- NEVER explain code in prose, ALWAYS show the actual code block first\n"
 )
@@ -38,7 +42,10 @@ TOOLS = [
     WEATHER_TOOL,
     WEB_SUMMARIZER_TOOL,
     CURRENCY_TOOL,
-    DATA_ANALYSIS_TOOL
+    DATA_ANALYSIS_TOOL,
+    REMEMBER_TOOL,
+    RECALL_TOOL,
+    FORGET_TOOL
 ]
 
 TOOL_MAP = {
@@ -50,7 +57,10 @@ TOOL_MAP = {
     "get_weather": get_weather,
     "summarize_website": summarize_website,
     "convert_currency": convert_currency,
-    "analyze_data": analyze_data
+    "analyze_data": analyze_data,
+    "remember": remember,
+    "recall": recall,
+    "forget": forget
 }
 
 MAX_ITERATIONS = 5
@@ -85,7 +95,7 @@ def run_agent(user_input: str, context: ContextManager) -> str:
 
                 context.add_tool_result(tool_call.id, result)
 
-                if tool_name in ["run_code", "convert_currency", "get_weather", "fetch_stock", "analyze_data"]:
+                if tool_name in ["run_code", "convert_currency", "get_weather", "fetch_stock", "analyze_data", "remember", "recall", "forget"]:
                     context.add_assistant_message(result)
                     return result
 
