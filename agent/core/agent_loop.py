@@ -11,6 +11,7 @@ from agent.tools.currency import convert_currency, CURRENCY_TOOL
 from agent.tools.data_analysis import analyze_data, DATA_ANALYSIS_TOOL
 from agent.tools.memory import remember, recall, forget, REMEMBER_TOOL, RECALL_TOOL, FORGET_TOOL
 from agent.tools.image_gen import generate_image, IMAGE_GEN_TOOL
+from agent.tools.voice import listen_voice, speak_text, LISTEN_TOOL, SPEAK_TOOL
 
 SYSTEM_PROMPT = (
     "You are AgentX, a powerful AI assistant that can:\n"
@@ -23,7 +24,8 @@ SYSTEM_PROMPT = (
     "7. Convert currencies with live rates\n"
     "8. Analyze CSV and Excel data files\n"
     "9. Remember and recall information across sessions\n"
-    "10. Generate AI images from text descriptions\n\n"
+    "10. Generate AI images from text descriptions\n"
+    "11. Listen to voice input and speak responses\n\n"
     "IMPORTANT RULES:\n"
     "- Call each tool ONLY ONCE per task\n"
     "- Do NOT repeat the same tool with same arguments\n"
@@ -48,7 +50,9 @@ TOOLS = [
     REMEMBER_TOOL,
     RECALL_TOOL,
     FORGET_TOOL,
-    IMAGE_GEN_TOOL
+    IMAGE_GEN_TOOL,
+    LISTEN_TOOL,
+    SPEAK_TOOL
 ]
 
 TOOL_MAP = {
@@ -64,7 +68,9 @@ TOOL_MAP = {
     "remember": remember,
     "recall": recall,
     "forget": forget,
-    "generate_image": generate_image
+    "generate_image": generate_image,
+    "listen_voice": listen_voice,
+    "speak_text": speak_text
 }
 
 MAX_ITERATIONS = 5
@@ -99,7 +105,7 @@ def run_agent(user_input: str, context: ContextManager) -> str:
 
                 context.add_tool_result(tool_call.id, result)
 
-                if tool_name in ["run_code", "convert_currency", "get_weather", "fetch_stock", "analyze_data", "remember", "recall", "forget", "generate_image"]:
+                if tool_name in ["run_code", "convert_currency", "get_weather", "fetch_stock", "analyze_data", "remember", "recall", "forget", "generate_image", "listen_voice", "speak_text"]:
                     context.add_assistant_message(result)
                     return result
 
