@@ -1,3 +1,4 @@
+from agent.agents.manager import run_manager
 import json
 from agent.core.llm import call_llm
 from agent.core.context import ContextManager
@@ -78,6 +79,13 @@ MAX_ITERATIONS = 5
 
 def run_agent(user_input: str, context: ContextManager) -> str:
     context.add_user_message(user_input)
+    # Multi-agent trigger
+    if any(keyword in user_input.lower() for keyword in ["research and write", "research report", "analyze and write", "multi agent", "create report"]):
+        print("\n🤖 Multi-Agent System activated!")
+        result = run_manager(user_input)
+        context.add_assistant_message(result)
+        return result
+
     called_tools = set()
 
     for iteration in range(MAX_ITERATIONS):
