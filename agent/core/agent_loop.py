@@ -17,13 +17,14 @@ SYSTEM_PROMPT = (
     "- Do NOT repeat the same tool with same arguments\n"
     "- After getting tool result, give final answer immediately\n"
     "- Be concise and direct in responses\n"
-    "- When writing and running code, ALWAYS show the code first, then the output\n"
-    "- Format code responses like this:\n"
+    "- When asked to write code, ALWAYS respond in this EXACT format:\n"
     "  Here is the code:\n"
     "  ```python\n"
-    "  <code here>\n"
+    "  <actual code here>\n"
     "  ```\n"
-    "  Output: <result>\n"
+    "  Output:\n"
+    "  <actual output here>\n"
+    "- NEVER explain code in prose, ALWAYS show the actual code block first\n"
 )
 
 TOOLS = [
