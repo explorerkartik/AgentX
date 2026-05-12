@@ -1,14 +1,19 @@
 import subprocess
 import tempfile
 import os
+import re
 
 def run_code(code: str) -> str:
     try:
-        import re
-        # Replace input() with default values
-        code = re.sub(r'input\([^)]*\)', '"10"', code)
+        # Clean code - remove markdown formatting
+        code = re.sub(r'```python\n?', '', code)
+        code = re.sub(r'```\n?', '', code)
+        code = code.strip()
         
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        # Replace input() with default value
+        code = re.sub(r'input\([^)]*\)', '"10"', code)
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
             f.write(code)
             temp_file = f.name
 
@@ -22,12 +27,15 @@ def run_code(code: str) -> str:
         os.unlink(temp_file)
 
         if result.returncode == 0:
-            return f"Output: {result.stdout}" if result.stdout else "Code executed successfully."
+            return f"```python\n{code}\n```\n\nOutput: {result.stdout.strip()}" if result.stdout else f"```python\n{code}\n```\n\nCode executed successfully."
         else:
-            return f"Output: {result.stdout}\nErrors: {result.stderr}"
+            return f"```python\n{code}\n```\n\nErrors: {result.stderr.strip()}"
 
+    except subprocess.TimeoutExpired:
+        return "❌ Code timeout — 10 seconds se zyada lag raha hai."
     except Exception as e:
         return f"Code execution error: {str(e)}"
+
 
 CODE_RUNNER_TOOL = {
     "type": "function",
@@ -39,7 +47,7 @@ CODE_RUNNER_TOOL = {
             "properties": {
                 "code": {
                     "type": "string",
-                    "description": "Python code to execute. Do not include language or markdown formatting, just raw Python code."
+                    "description": "Python code to execute. Raw Python only, no markdown formatting."
                 }
             },
             "required": ["code"]
