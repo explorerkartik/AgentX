@@ -9,3 +9,6 @@ requests
 python-dotenv
 gunicorn
 beautifulsoup4
+SpeechRecognition
+pyaudio
+pyttsx3
