@@ -293,6 +293,19 @@
             animation: fadeIn 0.3s ease;
             z-index: 999;
         }
+	/* Code blocks */
+pre {
+    background: #0a0a15;
+    border: 1px solid #3a3a5a;
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    margin: 8px 0;
+}
+
+code { font-family: 'Courier New', monospace; }
     </style>
 </head>
 <body>
@@ -378,9 +391,14 @@
             document.getElementById('toolCount').textContent = toolCount;
         }
 
-        div.innerHTML = `
-            <div class="avatar">${type === 'user' ? '👤' : '🤖'}</div>
-            <div class="bubble-wrapper">
+        const formatted = text
+    .replace(/```python([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+div.innerHTML = `
+    <div class="avatar">${type === 'user' ? '👤' : '🤖'}</div>
+    <div class="bubble-wrapper">
+        <div class="bubble">${formatted}</div>
                 <div class="bubble">${text}</div>
                 <div class="bubble-actions">
                     <button class="action-btn" onclick="copyText(this)">📋 Copy</button>
