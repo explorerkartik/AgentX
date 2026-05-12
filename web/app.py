@@ -33,8 +33,20 @@ def chat():
 
     try:
         response = run_agent(user_input, context)
-        return jsonify({'response': response})
-    except Exception as e:
+
+# Image response check karo
+if "static/generated/" in response:
+    import re
+    img_match = re.search(r'static/generated/\S+\.png', response)
+    if img_match:
+        img_path = img_match.group()
+        return jsonify({
+            "response": response,
+            "image": "/" + img_path
+        })
+
+return jsonify({"response": response})
+            except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/reset', methods=['POST'])
