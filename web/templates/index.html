@@ -223,6 +223,21 @@
         .chat-container::-webkit-scrollbar { width: 4px; }
         .chat-container::-webkit-scrollbar-track { background: transparent; }
         .chat-container::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 4px; }
+	/* Code block styling */
+        .bubble pre {
+            background: #0a0a1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .bubble code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #06b6d4;
+        }
     </style>
 </head>
 <body>
@@ -277,7 +292,10 @@
         div.className = `message ${role}`;
         div.innerHTML = `
             <div class="avatar">${role === 'user' ? '👤' : '🤖'}</div>
-            <div class="bubble">${text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</div>
+            <div class="bubble">${text.replace(/```python([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+   .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+   .replace(/\n/g, '<br>')}</div>
         `;
         chatContainer.appendChild(div);
         scrollToBottom();
