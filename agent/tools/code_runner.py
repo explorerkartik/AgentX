@@ -33,18 +33,13 @@ CODE_RUNNER_TOOL = {
     "type": "function",
     "function": {
         "name": "run_code",
-        "description": "Write and execute Python code. Always write complete working code.",
+        "description": "Write and execute Python code. Always use this to run Python programs.",
         "parameters": {
             "type": "object",
             "properties": {
                 "code": {
                     "type": "string",
-                    "description": "Complete Python code to execute"
-                },
-                "language": {
-                    "type": "string",
-                    "description": "Programming language (default: python)",
-                    "default": "python"
+                    "description": "Python code to execute. Do not include language or markdown formatting, just raw Python code."
                 }
             },
             "required": ["code"]
