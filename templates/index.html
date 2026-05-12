@@ -1,29 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgentX — AI Assistant</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
+        [data-theme="dark"] {
+            --bg: #0f0f1a;
+            --bg2: #1a1a2e;
+            --bg3: #2a2a4a;
+            --text: #e0e0e0;
+            --text2: #a0a0c0;
+            --border: #2a2a4a;
+            --user-bubble: #7c3aed30;
+            --agent-bubble: #1a1a2e;
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f2f5;
+            --bg2: #ffffff;
+            --bg3: #e0e0e0;
+            --text: #1a1a2e;
+            --text2: #6b7280;
+            --border: #d0d0d0;
+            --user-bubble: #7c3aed20;
+            --agent-bubble: #ffffff;
+        }
+
         body {
             font-family: 'Segoe UI', sans-serif;
-            background: #0f0f1a;
-            color: #e0e0e0;
+            background: var(--bg);
+            color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: all 0.3s;
         }
 
-        /* Header */
         .header {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            padding: 16px 24px;
+            background: var(--bg2);
+            padding: 14px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid #2a2a4a;
+            border-bottom: 1px solid var(--border);
         }
 
         .header h1 {
@@ -34,43 +56,59 @@
             font-weight: 700;
         }
 
-        .header p {
-            font-size: 0.75rem;
-            color: #6b7280;
-        }
+        .header p { font-size: 0.75rem; color: var(--text2); }
 
-        .clear-btn {
-            background: #ef444420;
-            color: #ef4444;
-            border: 1px solid #ef444440;
-            padding: 6px 14px;
+        .header-btns { display: flex; gap: 8px; }
+
+        .hbtn {
+            padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 0.8rem;
+            border: 1px solid var(--border);
+            background: var(--bg3);
+            color: var(--text);
             transition: all 0.2s;
         }
 
-        .clear-btn:hover { background: #ef444440; }
+        .hbtn:hover { opacity: 0.8; }
+        .hbtn.danger { background: #ef444420; color: #ef4444; border-color: #ef444440; }
 
-        /* Tools bar */
         .tools-bar {
-            background: #1a1a2e;
+            background: var(--bg2);
             padding: 8px 24px;
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-            border-bottom: 1px solid #2a2a4a;
+            border-bottom: 1px solid var(--border);
         }
 
         .tool-badge {
-            background: #2a2a4a;
+            background: var(--bg3);
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 0.7rem;
-            color: #a0a0c0;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        /* Chat area */
+        .tool-badge:hover { background: #7c3aed40; color: #7c3aed; }
+
+        /* Stats bar */
+        .stats-bar {
+            background: var(--bg2);
+            padding: 6px 24px;
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text2);
+        }
+
+        .stat-item { display: flex; align-items: center; gap: 4px; }
+        .stat-value { color: #7c3aed; font-weight: 600; }
+
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -83,7 +121,7 @@
         .message {
             display: flex;
             gap: 12px;
-            max-width: 80%;
+            max-width: 85%;
             animation: fadeIn 0.3s ease;
         }
 
@@ -108,6 +146,8 @@
         .user .avatar { background: linear-gradient(135deg, #7c3aed, #3b82f6); }
         .agent .avatar { background: linear-gradient(135deg, #059669, #3b82f6); }
 
+        .bubble-wrapper { display: flex; flex-direction: column; gap: 4px; max-width: 100%; }
+
         .bubble {
             padding: 12px 16px;
             border-radius: 16px;
@@ -115,21 +155,40 @@
             line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
+            background: var(--agent-bubble);
+            border: 1px solid var(--border);
         }
 
         .user .bubble {
-            background: linear-gradient(135deg, #7c3aed40, #3b82f640);
-            border: 1px solid #7c3aed40;
+            background: var(--user-bubble);
+            border-color: #7c3aed40;
             border-radius: 16px 4px 16px 16px;
         }
 
-        .agent .bubble {
-            background: #1a1a2e;
-            border: 1px solid #2a2a4a;
-            border-radius: 4px 16px 16px 16px;
+        .agent .bubble { border-radius: 4px 16px 16px 16px; }
+
+        .bubble-actions {
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        /* Typing indicator */
+        .message:hover .bubble-actions { opacity: 1; }
+
+        .action-btn {
+            background: var(--bg3);
+            border: none;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            color: var(--text2);
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover { background: #7c3aed40; color: #7c3aed; }
+
         .typing .bubble {
             display: flex;
             gap: 4px;
@@ -138,8 +197,7 @@
         }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 8px; height: 8px;
             background: #7c3aed;
             border-radius: 50%;
             animation: bounce 1.2s infinite;
@@ -153,23 +211,22 @@
             40% { transform: translateY(-8px); }
         }
 
-        /* Input area */
         .input-area {
             padding: 16px 24px;
-            background: #1a1a2e;
-            border-top: 1px solid #2a2a4a;
+            background: var(--bg2);
+            border-top: 1px solid var(--border);
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: flex-end;
         }
 
         textarea {
             flex: 1;
-            background: #0f0f1a;
-            border: 1px solid #2a2a4a;
+            background: var(--bg);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 12px 16px;
-            color: #e0e0e0;
+            color: var(--text);
             font-size: 0.9rem;
             font-family: inherit;
             resize: none;
@@ -180,15 +237,13 @@
         }
 
         textarea:focus { border-color: #7c3aed; }
-
-        textarea::placeholder { color: #4a4a6a; }
+        textarea::placeholder { color: var(--text2); }
 
         .send-btn {
             background: linear-gradient(135deg, #7c3aed, #3b82f6);
             color: white;
             border: none;
-            width: 48px;
-            height: 48px;
+            width: 48px; height: 48px;
             border-radius: 12px;
             cursor: pointer;
             font-size: 1.2rem;
@@ -199,10 +254,45 @@
         .send-btn:hover { opacity: 0.9; }
         .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Scrollbar */
+        .voice-btn {
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .voice-btn.listening {
+            background: #ef444420;
+            border-color: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
         .chat-container::-webkit-scrollbar { width: 4px; }
         .chat-container::-webkit-scrollbar-track { background: transparent; }
-        .chat-container::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 2px; }
+        .chat-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            background: #059669;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            animation: fadeIn 0.3s ease;
+            z-index: 999;
+        }
     </style>
 </head>
 <body>
@@ -212,7 +302,11 @@
         <h1>⚡ AgentX</h1>
         <p>Powered by Groq LLM • Multi-Agent AI</p>
     </div>
-    <button class="clear-btn" onclick="clearChat()">🗑️ Clear</button>
+    <div class="header-btns">
+        <button class="hbtn" onclick="toggleTheme()">🌙 Theme</button>
+        <button class="hbtn" onclick="downloadChat()">⬇️ Save</button>
+        <button class="hbtn danger" onclick="clearChat()">🗑️ Clear</button>
+    </div>
 </div>
 
 <div class="tools-bar">
@@ -227,21 +321,45 @@
     <span class="tool-badge">🤖 Multi-Agent</span>
 </div>
 
+<div class="stats-bar">
+    <div class="stat-item">💬 Messages: <span class="stat-value" id="msgCount">0</span></div>
+    <div class="stat-item">🔧 Tools Used: <span class="stat-value" id="toolCount">0</span></div>
+    <div class="stat-item">⏱️ Session: <span class="stat-value" id="sessionTime">00:00</span></div>
+    <div class="stat-item">🤖 Agent: <span class="stat-value">AgentX v2.0</span></div>
+</div>
+
 <div class="chat-container" id="chat">
     <div class="message agent">
         <div class="avatar">🤖</div>
-        <div class="bubble">Hey! I'm <strong>AgentX</strong> — your personal AI assistant.<br><br>
-        I can search the web, write code, analyze data, generate images, convert currencies, check weather, and much more!<br><br>
-        What can I help you with today? 🚀</div>
+        <div class="bubble-wrapper">
+            <div class="bubble">Hey! I'm <strong>AgentX</strong> — your personal AI assistant.<br><br>
+            I can search the web, write code, analyze data, generate images, convert currencies, check weather, and much more!<br><br>
+            What can I help you with today? 🚀</div>
+        </div>
     </div>
 </div>
 
 <div class="input-area">
-    <textarea id="input" placeholder="Ask me anything..." rows="1" onkeydown="handleKey(event)"></textarea>
+    <textarea id="input" placeholder="Ask me anything... (Enter to send, Shift+Enter for new line)" rows="1" onkeydown="handleKey(event)"></textarea>
+    <button class="voice-btn" id="voiceBtn" onclick="startVoice()" title="Voice Input">🎙️</button>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
 </div>
 
 <script>
+    let msgCount = 0;
+    let toolCount = 0;
+    let sessionStart = Date.now();
+    let isListening = false;
+    let chatHistory = [];
+
+    // Session timer
+    setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+        const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+        const secs = String(elapsed % 60).padStart(2, '0');
+        document.getElementById('sessionTime').textContent = `${mins}:${secs}`;
+    }, 1000);
+
     function handleKey(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -253,13 +371,49 @@
         const chat = document.getElementById('chat');
         const div = document.createElement('div');
         div.className = `message ${type}`;
+
+        const toolsUsed = (text.match(/🔧|🌤️|💱|🧠|🖼️|🔍|💻|📊/g) || []).length;
+        if (toolsUsed > 0) {
+            toolCount += toolsUsed;
+            document.getElementById('toolCount').textContent = toolCount;
+        }
+
         div.innerHTML = `
             <div class="avatar">${type === 'user' ? '👤' : '🤖'}</div>
-            <div class="bubble">${text}</div>
+            <div class="bubble-wrapper">
+                <div class="bubble">${text}</div>
+                <div class="bubble-actions">
+                    <button class="action-btn" onclick="copyText(this)">📋 Copy</button>
+                    ${type === 'agent' ? '<button class="action-btn" onclick="speakText(this)">🔊 Speak</button>' : ''}
+                </div>
+            </div>
         `;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
-        return div;
+
+        // Save to history
+        chatHistory.push({ role: type, content: text, time: new Date().toLocaleTimeString() });
+
+        msgCount++;
+        document.getElementById('msgCount').textContent = msgCount;
+    }
+
+    function copyText(btn) {
+        const bubble = btn.closest('.bubble-wrapper').querySelector('.bubble');
+        navigator.clipboard.writeText(bubble.textContent);
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy', 2000);
+    }
+
+    function speakText(btn) {
+        const bubble = btn.closest('.bubble-wrapper').querySelector('.bubble');
+        const text = bubble.textContent.substring(0, 200);
+        fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: `speak this: ${text}` })
+        });
+        showToast('🔊 Speaking...');
     }
 
     function addTyping() {
@@ -313,15 +467,75 @@
         input.focus();
     }
 
+    async function startVoice() {
+        const btn = document.getElementById('voiceBtn');
+        btn.classList.add('listening');
+        btn.textContent = '🔴';
+        showToast('🎙️ Listening...');
+
+        try {
+            const res = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: 'listen to my voice' })
+            });
+            const data = await res.json();
+            if (data.response && !data.response.includes('⚠️')) {
+                document.getElementById('input').value = data.response.replace('Suna: ', '');
+            }
+        } catch (err) {
+            showToast('❌ Voice error');
+        }
+
+        btn.classList.remove('listening');
+        btn.textContent = '🎙️';
+    }
+
+    function toggleTheme() {
+        const html = document.documentElement;
+        const current = html.getAttribute('data-theme');
+        html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        showToast(current === 'dark' ? '☀️ Light mode' : '🌙 Dark mode');
+    }
+
+    function downloadChat() {
+        let content = '=== AgentX Chat History ===\n\n';
+        chatHistory.forEach(msg => {
+            content += `[${msg.time}] ${msg.role.toUpperCase()}: ${msg.content}\n\n`;
+        });
+        const blob = new Blob([content], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `AgentX_Chat_${new Date().toLocaleDateString()}.txt`;
+        a.click();
+        showToast('✅ Chat saved!');
+    }
+
     async function clearChat() {
         await fetch('/clear', { method: 'POST' });
-        const chat = document.getElementById('chat');
-        chat.innerHTML = `
+        document.getElementById('chat').innerHTML = `
             <div class="message agent">
                 <div class="avatar">🤖</div>
-                <div class="bubble">Chat clear ho gaya! Kya help chahiye? 🚀</div>
+                <div class="bubble-wrapper">
+                    <div class="bubble">Chat clear ho gaya! Kya help chahiye? 🚀</div>
+                </div>
             </div>
         `;
+        chatHistory = [];
+        msgCount = 0;
+        toolCount = 0;
+        document.getElementById('msgCount').textContent = 0;
+        document.getElementById('toolCount').textContent = 0;
+    }
+
+    function showToast(msg) {
+        const existing = document.querySelector('.toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2000);
     }
 </script>
 

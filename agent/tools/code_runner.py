@@ -2,43 +2,32 @@ import subprocess
 import tempfile
 import os
 
-def run_code(code: str, language: str = "python") -> str:
+def run_code(code: str) -> str:
     try:
-        if language.lower() == "python":
-            with tempfile.NamedTemporaryFile(
-                mode='w',
-                suffix='.py',
-                delete=False
-            ) as f:
-                f.write(code)
-                temp_file = f.name
+        import re
+        # Replace input() with default values
+        code = re.sub(r'input\([^)]*\)', '"10"', code)
+        
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            f.write(code)
+            temp_file = f.name
 
-            result = subprocess.run(
-                ["python", temp_file],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
+        result = subprocess.run(
+            ['python', temp_file],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
 
-            os.unlink(temp_file)
+        os.unlink(temp_file)
 
-            output = result.stdout if result.stdout else "No output"
-            error = result.stderr if result.stderr else ""
-
-            # Code aur output dono return karo
-            response = f"```python\n{code}\n```\n\nOutput:\n{output}"
-            if error:
-                response += f"\nErrors:\n{error}"
-
-            return response
+        if result.returncode == 0:
+            return f"Output: {result.stdout}" if result.stdout else "Code executed successfully."
         else:
-            return "Abhi sirf Python supported hai."
+            return f"Output: {result.stdout}\nErrors: {result.stderr}"
 
-    except subprocess.TimeoutExpired:
-        return "Error: Code 30 seconds mein complete nahi hua (timeout)."
     except Exception as e:
-        return f"Code run error: {str(e)}"
-
+        return f"Code execution error: {str(e)}"
 
 CODE_RUNNER_TOOL = {
     "type": "function",
