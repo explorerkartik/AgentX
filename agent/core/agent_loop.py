@@ -69,6 +69,10 @@ def run_agent(user_input: str, context: ContextManager) -> str:
                 print(f"✅ Result: {result[:200]}...")
 
                 context.add_tool_result(tool_call.id, result)
+		# Code tool result directly return karo
+                if tool_name == "run_code":
+                    context.add_assistant_message(result)
+                    return result
 
         else:
             final_response = message.content or "Koi response nahi mila."
