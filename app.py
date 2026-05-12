@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from agent.core.agent_loop import run_agent
 from agent.core.context import ContextManager
+import os
 
 app = Flask(__name__)
 context = ContextManager()
@@ -14,7 +15,6 @@ def chat():
     user_input = request.json.get("message", "")
     if not user_input:
         return jsonify({"response": "Kuch bolo!"})
-    
     response = run_agent(user_input, context)
     return jsonify({"response": response})
 
@@ -25,6 +25,5 @@ def clear():
     return jsonify({"status": "cleared"})
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)import os
-port = int(os.environ.get("PORT", 5000))
-app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
