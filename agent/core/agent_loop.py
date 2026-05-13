@@ -1,7 +1,7 @@
-from agent.agents.manager import run_manager
 import json
 from agent.core.llm import call_llm
 from agent.core.context import ContextManager
+from agent.core.planner import create_plan, summarize_results
 from agent.tools.web_search import web_search, WEB_SEARCH_TOOL
 from agent.tools.code_runner import run_code, CODE_RUNNER_TOOL
 from agent.tools.file_analyzer import analyze_file, FILE_ANALYZER_TOOL
@@ -12,10 +12,9 @@ from agent.tools.currency import convert_currency, CURRENCY_TOOL
 from agent.tools.data_analysis import analyze_data, DATA_ANALYSIS_TOOL
 from agent.tools.memory import remember, recall, forget, REMEMBER_TOOL, RECALL_TOOL, FORGET_TOOL
 from agent.tools.image_gen import generate_image, IMAGE_GEN_TOOL
-from agent.tools.voice import listen_voice, speak_text, LISTEN_TOOL, SPEAK_TOOL
 
 SYSTEM_PROMPT = (
-    "You are AgentX, a powerful AI assistant that can:\n"
+    "You are AgentX, a powerful autonomous AI agent that can:\n"
     "1. Search the web for current information\n"
     "2. Write and execute Python code\n"
     "3. Analyze files (PDF, Word, text, code)\n"
@@ -25,17 +24,15 @@ SYSTEM_PROMPT = (
     "7. Convert currencies with live rates\n"
     "8. Analyze CSV and Excel data files\n"
     "9. Remember and recall information across sessions\n"
-    "10. Generate AI images from text descriptions\n"
-    "11. Listen to voice input and speak responses\n\n"
+    "10. Generate AI images from text descriptions\n\n"
     "IMPORTANT RULES:\n"
     "- Call each tool ONLY ONCE per task\n"
     "- Do NOT repeat the same tool with same arguments\n"
     "- After getting tool result, give final answer immediately\n"
     "- Be concise and direct in responses\n"
-    "- When user shares personal info (name, preferences), use 'remember' tool automatically\n"
+    "- When user shares personal info, use 'remember' tool automatically\n"
     "- When asked about past info, use 'recall' tool\n"
     "- When asked to write code, ALWAYS show code block first then output\n"
-    "- NEVER explain code in prose, ALWAYS show the actual code block first\n"
 )
 
 TOOLS = [
@@ -51,9 +48,7 @@ TOOLS = [
     REMEMBER_TOOL,
     RECALL_TOOL,
     FORGET_TOOL,
-    IMAGE_GEN_TOOL,
-    LISTEN_TOOL,
-    SPEAK_TOOL
+    IMAGE_GEN_TOOL
 ]
 
 TOOL_MAP = {
@@ -69,23 +64,102 @@ TOOL_MAP = {
     "remember": remember,
     "recall": recall,
     "forget": forget,
-    "generate_image": generate_image,
-    "listen_voice": listen_voice,
-    "speak_text": speak_text
+    "generate_image": generate_image
 }
 
 MAX_ITERATIONS = 5
 
+AGENTIC_KEYWORDS = [
+    "research", "analyze", "report", "investigate", "find out everything",
+    "full analysis", "complete report", "detailed", "comprehensive",
+    "step by step", "plan", "automate", "do everything", "handle this"
+]
+
+
+def is_agentic_task(user_input: str) -> bool:
+    lower = user_input.lower()
+    return any(keyword in lower for keyword in AGENTIC_KEYWORDS)
+
+
+def execute_tool(tool_name: str, task: str, arg: str = "") -> str:
+    try:
+        query = arg if arg else task
+        if tool_name == "web_search":
+            return web_search(query)
+        elif tool_name == "fetch_news":
+            return fetch_news(query)
+        elif tool_name == "fetch_stock":
+            return fetch_stock(query)
+        elif tool_name == "get_weather":
+            return get_weather(query)
+        elif tool_name == "summarize_website":
+            if query.startswith("http"):
+                return summarize_website(query)
+            return web_search(query)
+        elif tool_name == "run_code":
+            return run_code(query)
+        elif tool_name == "generate_image":
+            return generate_image(query)
+        elif tool_name == "remember":
+            return remember(query)
+        elif tool_name == "recall":
+            return recall(query)
+        else:
+            return f"Step completed: {task}"
+    except Exception as e:
+        return f"Tool error: {str(e)}"
+
+
+def run_agentic(user_input: str) -> str:
+    print(f"\n🧠 AGENTIC MODE: Planning for '{user_input}'")
+
+    plan = create_plan(user_input)
+    print(f"📋 Plan: {json.dumps(plan, indent=2)}")
+
+    results = []
+    progress = f"🧠 **AgentX Autonomous Mode**\n📋 **Goal:** {user_input}\n\n"
+    progress += f"**Plan ({len(plan)} steps):**\n"
+
+    for step in plan:
+        progress += f"  {step['step']}. {step['task']}\n"
+
+    progress += "\n**Executing...**\n\n"
+
+    for step in plan:
+        step_num = step.get('step', '?')
+        task = step.get('task', '')
+        tool = step.get('tool', 'web_search')
+        arg = step.get('arg', '')
+
+        print(f"\n⚡ Step {step_num}: {task} (tool: {tool}, arg: {arg})")
+        progress += f"**Step {step_num}:** {task}\n"
+
+        if tool == "none":
+            result = f"Analysis step: {task}"
+        else:
+            result = execute_tool(tool, task, arg)
+
+        results.append({
+            "step": step_num,
+            "task": task,
+            "tool": tool,
+            "result": result[:500]
+        })
+
+        progress += f"✅ Done\n\n"
+        print(f"✅ Result: {result[:100]}...")
+
+    print("\n📝 Generating final report...")
+    final_report = summarize_results(user_input, results)
+
+    return progress + "---\n\n" + final_report
+
 
 def run_agent(user_input: str, context: ContextManager) -> str:
-    context.add_user_message(user_input)
-    # Multi-agent trigger
-    if any(keyword in user_input.lower() for keyword in ["research and write", "research report", "analyze and write", "multi agent", "create report"]):
-        print("\n🤖 Multi-Agent System activated!")
-        result = run_manager(user_input)
-        context.add_assistant_message(result)
-        return result
+    if is_agentic_task(user_input):
+        return run_agentic(user_input)
 
+    context.add_user_message(user_input)
     called_tools = set()
 
     for iteration in range(MAX_ITERATIONS):
@@ -102,7 +176,7 @@ def run_agent(user_input: str, context: ContextManager) -> str:
 
                 tool_key = f"{tool_name}_{str(tool_args)}"
                 if tool_key in called_tools:
-                    result = "Tool already called with same arguments. Use the previous result."
+                    result = "Tool already called with same arguments."
                 elif tool_name in TOOL_MAP:
                     called_tools.add(tool_key)
                     result = TOOL_MAP[tool_name](**tool_args)
@@ -110,10 +184,11 @@ def run_agent(user_input: str, context: ContextManager) -> str:
                     result = f"Unknown tool: {tool_name}"
 
                 print(f"✅ Result: {result[:200]}...")
-
                 context.add_tool_result(tool_call.id, result)
 
-                if tool_name in ["run_code", "convert_currency", "get_weather", "fetch_stock", "analyze_data", "remember", "recall", "forget", "generate_image", "listen_voice", "speak_text"]:
+                if tool_name in ["run_code", "convert_currency", "get_weather",
+                                  "fetch_stock", "analyze_data", "remember",
+                                  "recall", "forget", "generate_image"]:
                     context.add_assistant_message(result)
                     return result
 
@@ -122,4 +197,4 @@ def run_agent(user_input: str, context: ContextManager) -> str:
             context.add_assistant_message(final_response)
             return final_response
 
-    return "Max iterations reach ho gayi. Task complete nahi hua."
+    return "Max iterations reach ho gayi."
