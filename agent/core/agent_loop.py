@@ -1,3 +1,4 @@
+from agent.core.react_agent import run_react
 import json
 from agent.core.llm import call_llm
 from agent.core.context import ContextManager
@@ -80,6 +81,17 @@ def is_agentic_task(user_input: str) -> bool:
     lower = user_input.lower()
     return any(keyword in lower for keyword in AGENTIC_KEYWORDS)
 
+REACT_KEYWORDS = [
+    "create", "build", "make", "develop", "automate", "generate report",
+    "do everything", "handle", "complete task", "end to end",
+    "write and run", "code and", "fetch and", "search and analyze",
+    "dashboard", "project", "full", "entire", "whole"
+]
+
+def is_react_task(user_input: str) -> bool:
+    lower = user_input.lower()
+    return any(keyword in lower for keyword in REACT_KEYWORDS)
+
 
 def execute_tool(tool_name: str, task: str, arg: str = "") -> str:
     try:
@@ -156,6 +168,8 @@ def run_agentic(user_input: str) -> str:
 
 
 def run_agent(user_input: str, context: ContextManager) -> str:
+    if is_react_task(user_input):
+        return run_react(user_input)
     if is_agentic_task(user_input):
         return run_agentic(user_input)
 
