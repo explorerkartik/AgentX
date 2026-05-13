@@ -431,7 +431,10 @@
         if (text && text.includes('static/generated/')) {
             const match = text.match(/img_\d+\.png/);
             if (match) {
-                bubbleContent = `<img src="/static/generated/${match[0]}" style="max-width:100%;border-radius:12px;">`;
+    bubbleContent = `
+        <img src="/static/generated/${match[0]}" style="max-width:100%;border-radius:12px;">
+        <a href="/static/generated/${match[0]}" download style="display:inline-block;margin-top:8px;padding:6px 14px;background:linear-gradient(135deg,#667eea,#764ba2);color:white;border-radius:8px;font-size:0.75rem;text-decoration:none;">⬇️ Download Image</a>
+    `;
             } else {
                 bubbleContent = formatText(text);
             }
