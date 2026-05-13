@@ -56,7 +56,7 @@ RULES:
 """
 
 def parse_react_response(text: str) -> dict:
-    """ReAct response parse karo"""
+    """ReAct response parse karo — sirf PEHLA action lo"""
     result = {
         "thought": "",
         "action": None,
@@ -65,37 +65,57 @@ def parse_react_response(text: str) -> dict:
     }
 
     lines = text.strip().split('\n')
-    current_key = None
-    current_value = []
 
-    for line in lines:
-        if line.startswith("Thought:"):
-            if current_key and current_value:
-                result[current_key] = '\n'.join(current_value).strip()
-            current_key = "thought"
-            current_value = [line[8:].strip()]
-        elif line.startswith("Action:"):
-            if current_key and current_value:
-                result[current_key] = '\n'.join(current_value).strip()
-            current_key = "action"
-            current_value = [line[7:].strip()]
-        elif line.startswith("Action Input:"):
-            if current_key and current_value:
-                result[current_key] = '\n'.join(current_value).strip()
-            current_key = "action_input"
-            current_value = [line[13:].strip()]
+    thought_lines = []
+    action = None
+    action_input_lines = []
+    final_answer_lines = []
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        if line.startswith("Thought:") and not action:
+            thought_lines.append(line[8:].strip())
+
+        elif line.startswith("Action:") and not action:
+            # Sirf PEHLA action lo
+            action = line[7:].strip()
+
+        elif line.startswith("Action Input:") and action and not result["action"]:
+            result["thought"] = ' '.join(thought_lines).strip()
+            result["action"] = action
+            # Multi-line input support
+            inp = line[13:].strip()
+            action_input_lines.append(inp)
+            i += 1
+            while i < len(lines):
+                next_line = lines[i]
+                if next_line.startswith("Thought:") or next_line.startswith("Action:") or next_line.startswith("Final Answer:"):
+                    break
+                action_input_lines.append(next_line)
+                i += 1
+            result["action_input"] = '\n'.join(action_input_lines).strip()
+            # Backticks remove karo
+            if result["action_input"].startswith("```"):
+                result["action_input"] = result["action_input"].strip('`').strip()
+                if result["action_input"].startswith("python"):
+                    result["action_input"] = result["action_input"][6:].strip()
+            return result
+
         elif line.startswith("Final Answer:"):
-            if current_key and current_value:
-                result[current_key] = '\n'.join(current_value).strip()
-            current_key = "final_answer"
-            current_value = [line[13:].strip()]
-        else:
-            if current_key:
-                current_value.append(line)
+            result["thought"] = ' '.join(thought_lines).strip()
+            final_answer_lines.append(line[13:].strip())
+            i += 1
+            while i < len(lines):
+                final_answer_lines.append(lines[i])
+                i += 1
+            result["final_answer"] = '\n'.join(final_answer_lines).strip()
+            return result
 
-    if current_key and current_value:
-        result[current_key] = '\n'.join(current_value).strip()
+        i += 1
 
+    result["thought"] = ' '.join(thought_lines).strip()
     return result
 
 
