@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import re
 from flask import Flask, render_template, request, jsonify
 from agent.core.agent_loop import run_agent
